@@ -1,0 +1,244 @@
+{
+  "info": {
+    "name": "OneScale Auth Service API",
+    "description": "Complete API collection for OneScale Authentication Microservice",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080/api/v1/auth",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Send Email OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"user@example.com\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/otp/email/send",
+          "host": ["{{base_url}}"],
+          "path": ["otp", "email", "send"]
+        }
+      }
+    },
+    {
+      "name": "Verify Email OTP",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.data && jsonData.data.access_token) {",
+              "    pm.collectionVariables.set('access_token', jsonData.data.access_token);",
+              "    pm.collectionVariables.set('refresh_token', jsonData.data.refresh_token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"user@example.com\",\n  \"otpCode\": \"123456\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/otp/email/verify",
+          "host": ["{{base_url}}"],
+          "path": ["otp", "email", "verify"]
+        }
+      }
+    },
+    {
+      "name": "Send Mobile OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mobileNumber\": \"+1234567890\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/otp/mobile/send",
+          "host": ["{{base_url}}"],
+          "path": ["otp", "mobile", "send"]
+        }
+      }
+    },
+    {
+      "name": "Verify Mobile OTP",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.data && jsonData.data.access_token) {",
+              "    pm.collectionVariables.set('access_token', jsonData.data.access_token);",
+              "    pm.collectionVariables.set('refresh_token', jsonData.data.refresh_token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mobileNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/otp/mobile/verify",
+          "host": ["{{base_url}}"],
+          "path": ["otp", "mobile", "verify"]
+        }
+      }
+    },
+    {
+      "name": "Google OAuth Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.data && jsonData.data.access_token) {",
+              "    pm.collectionVariables.set('access_token', jsonData.data.access_token);",
+              "    pm.collectionVariables.set('refresh_token', jsonData.data.refresh_token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"idToken\": \"your-google-id-token-here\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/google",
+          "host": ["{{base_url}}"],
+          "path": ["google"]
+        }
+      }
+    },
+    {
+      "name": "Refresh Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.data && jsonData.data.access_token) {",
+              "    pm.collectionVariables.set('access_token', jsonData.data.access_token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/refresh",
+          "host": ["{{base_url}}"],
+          "path": ["refresh"]
+        }
+      }
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/logout",
+          "host": ["{{base_url}}"],
+          "path": ["logout"]
+        }
+      }
+    }
+  ]
+}
