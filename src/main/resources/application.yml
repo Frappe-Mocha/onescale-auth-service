@@ -37,21 +37,21 @@ server:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:your-256-bit-secret-key-here-change-in-production-min-32-chars}
+  secret: ${JWT_SECRET:x3o65mvVjRtm6cGwZwRXFylpzATIaLQMCoqE/Jdwv5w=}
   access-token-expiration: 900000      # 15 minutes in milliseconds
   refresh-token-expiration: 2592000000 # 30 days in milliseconds
   issuer: onescale-auth-service
 
 # Twilio Configuration
 twilio:
-  account-sid: ${TWILIO_ACCOUNT_SID:your-account-sid}
-  auth-token: ${TWILIO_AUTH_TOKEN:your-auth-token}
-  verify-service-sid: ${TWILIO_VERIFY_SERVICE_SID:your-verify-service-sid}
+  account-sid: ${TWILIO_ACCOUNT_SID:ACb616f964917a69caf61b492d4bef89e5}
+  auth-token: ${TWILIO_AUTH_TOKEN:cc48cbc2a6d782d48d0860d4e234b570}
+  verify-service-sid: ${TWILIO_VERIFY_SERVICE_SID:VA3d65f181ca5e49a0283977ad9254e897}
 
 # Google OAuth Configuration
 google:
   oauth:
-    client-id: ${GOOGLE_OAUTH_CLIENT_ID:your-google-client-id.apps.googleusercontent.com}
+    client-id: ${GOOGLE_OAUTH_CLIENT_ID:487469562816-q8kbmpqn7mtal96sg2v8pb56j3sqid37.apps.googleusercontent.com}
 
 # OTP Configuration
 otp:

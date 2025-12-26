@@ -66,10 +66,10 @@ public class OtpService {
 
     public boolean verifyEmailOtp(String email, String otpCode) {
         try {
-            VerificationCheck verificationCheck = VerificationCheck.creator(
-                    verifyServiceSid,
-                    otpCode
-            ).setTo(email).create();
+            VerificationCheck verificationCheck = VerificationCheck.creator(verifyServiceSid)
+                    .setCode(otpCode)
+                    .setTo(email)
+                    .create();
 
             boolean isValid = "approved".equals(verificationCheck.getStatus());
             log.info("Email OTP verification for {}: {}", email, isValid);
@@ -82,10 +82,10 @@ public class OtpService {
 
     public boolean verifyMobileOtp(String mobileNumber, String otpCode) {
         try {
-            VerificationCheck verificationCheck = VerificationCheck.creator(
-                    verifyServiceSid,
-                    otpCode
-            ).setTo(mobileNumber).create();
+            VerificationCheck verificationCheck = VerificationCheck.creator(verifyServiceSid)
+                    .setCode(otpCode)
+                    .setTo(mobileNumber)
+                    .create();
 
             boolean isValid = "approved".equals(verificationCheck.getStatus());
             log.info("Mobile OTP verification for {}: {}", mobileNumber, isValid);
