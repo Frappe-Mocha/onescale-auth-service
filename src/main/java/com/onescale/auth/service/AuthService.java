@@ -212,6 +212,46 @@ public class AuthService {
         log.info("All refresh tokens revoked for user: {}", userId);
     }
 
+    public TokenValidationDto validateAccessToken(String accessToken) {
+        try {
+            // Validate token signature and expiration
+            io.jsonwebtoken.Claims claims = jwtUtil.validateToken(accessToken);
+
+            // Verify it's an access token
+            if (!"access".equals(claims.get("token_type"))) {
+                throw new InvalidTokenException("Token is not an access token");
+            }
+
+            Long userId = Long.parseLong(claims.getSubject());
+
+            // Verify user exists and is active
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new InvalidTokenException("User not found"));
+
+            if (!user.getIsActive()) {
+                throw new InvalidTokenException("User account is not active");
+            }
+
+            // Return validation result with user info
+            return TokenValidationDto.builder()
+                    .isValid(true)
+                    .userId(userId)
+                    .email((String) claims.get("email"))
+                    .mobileNumber((String) claims.get("mobile_number"))
+                    .tokenType((String) claims.get("token_type"))
+                    .issuedAt(claims.getIssuedAt().getTime() / 1000)
+                    .expiresAt(claims.getExpiration().getTime() / 1000)
+                    .build();
+
+        } catch (InvalidTokenException e) {
+            log.error("Token validation failed: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error during token validation: {}", e.getMessage());
+            throw new InvalidTokenException("Token validation failed: " + e.getMessage());
+        }
+    }
+
     private AuthResponseDto generateAuthResponse(User user) {
         String accessToken = jwtUtil.generateAccessToken(user);
         String refreshToken = jwtUtil.generateRefreshToken(user);

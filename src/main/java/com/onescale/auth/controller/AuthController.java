@@ -56,6 +56,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponseDto.success("Logged out successfully"));
     }
 
+    @PostMapping("/validate")
+    public ResponseEntity<ApiResponseDto> validateToken(@Valid @RequestBody ValidateTokenRequestDto request) {
+        TokenValidationDto validationResult = authService.validateAccessToken(request.getAccessToken());
+        return ResponseEntity.ok(ApiResponseDto.success("Token is valid", validationResult));
+    }
+
     @GetMapping("/health")
     public ResponseEntity<ApiResponseDto> health() {
         return ResponseEntity.ok(ApiResponseDto.success("Auth service is running"));
