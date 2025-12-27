@@ -1,11 +1,13 @@
 package com.onescale.auth.service;
 
+import com.onescale.auth.config.TwilioProperties;
 import com.onescale.auth.exception.OtpException;
 import com.onescale.auth.exception.RateLimitException;
 import com.twilio.rest.verify.v2.service.Verification;
 import com.twilio.rest.verify.v2.service.VerificationCheck;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -19,8 +21,8 @@ public class OtpService {
 
     private final RedisTemplate<String, String> redisTemplate;
 
-    @Value("${twilio.verify-service-sid}")
-    private String verifyServiceSid;
+    @Autowired
+    private final TwilioProperties properties;
 
     @Value("${otp.rate-limit.max-requests}")
     private int maxRequests;
@@ -35,7 +37,7 @@ public class OtpService {
 
         try {
             Verification verification = Verification.creator(
-                    verifyServiceSid,
+                    properties.getVerifyServiceSid(),
                     email,
                     "email"
             ).create();
@@ -52,7 +54,7 @@ public class OtpService {
 
         try {
             Verification verification = Verification.creator(
-                    verifyServiceSid,
+                    properties.getVerifyServiceSid(),
                     mobileNumber,
                     "sms"
             ).create();
@@ -66,7 +68,7 @@ public class OtpService {
 
     public boolean verifyEmailOtp(String email, String otpCode) {
         try {
-            VerificationCheck verificationCheck = VerificationCheck.creator(verifyServiceSid)
+            VerificationCheck verificationCheck = VerificationCheck.creator(properties.getVerifyServiceSid())
                     .setCode(otpCode)
                     .setTo(email)
                     .create();
@@ -82,7 +84,7 @@ public class OtpService {
 
     public boolean verifyMobileOtp(String mobileNumber, String otpCode) {
         try {
-            VerificationCheck verificationCheck = VerificationCheck.creator(verifyServiceSid)
+            VerificationCheck verificationCheck = VerificationCheck.creator(properties.getVerifyServiceSid())
                     .setCode(otpCode)
                     .setTo(mobileNumber)
                     .create();
