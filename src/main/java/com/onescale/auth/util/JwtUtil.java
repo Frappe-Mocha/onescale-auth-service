@@ -1,5 +1,6 @@
 package com.onescale.auth.util;
 
+import com.onescale.auth.config.JwtProperties;
 import com.onescale.auth.entity.User;
 import com.onescale.auth.exception.InvalidTokenException;
 import io.jsonwebtoken.Claims;
@@ -24,20 +25,14 @@ import java.util.Map;
 @Slf4j
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
-    private String secret;
+    private final JwtProperties jwtProperties;
 
-    @Value("${jwt.access-token-expiration}")
-    private Long accessTokenExpiration;
-
-    @Value("${jwt.refresh-token-expiration}")
-    private Long refreshTokenExpiration;
-
-    @Value("${jwt.issuer}")
-    private String issuer;
+    public JwtUtil(JwtProperties jwtProperties) {
+        this.jwtProperties = jwtProperties;
+    }
 
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        return Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateAccessToken(User user) {
@@ -50,9 +45,9 @@ public class JwtUtil {
         return Jwts.builder()
                 .claims(claims)
                 .subject(user.getId().toString())
-                .issuer(issuer)
+                .issuer(jwtProperties.getIssuer())
                 .issuedAt(Date.from(Instant.now()))
-                .expiration(Date.from(Instant.now().plusMillis(accessTokenExpiration)))
+                .expiration(Date.from(Instant.now().plusMillis(jwtProperties.getAccessTokenExpiration())))
                 .signWith(getSigningKey())
                 .compact();
     }
@@ -65,9 +60,9 @@ public class JwtUtil {
         return Jwts.builder()
                 .claims(claims)
                 .subject(user.getId().toString())
-                .issuer(issuer)
+                .issuer(jwtProperties.getIssuer())
                 .issuedAt(Date.from(Instant.now()))
-                .expiration(Date.from(Instant.now().plusMillis(refreshTokenExpiration)))
+                .expiration(Date.from(Instant.now().plusMillis(jwtProperties.getRefreshTokenExpiration())))
                 .signWith(getSigningKey())
                 .compact();
     }
@@ -116,10 +111,10 @@ public class JwtUtil {
     }
 
     public Long getAccessTokenExpirationInSeconds() {
-        return accessTokenExpiration / 1000;
+        return jwtProperties.getAccessTokenExpiration() / 1000;
     }
 
     public Date getRefreshTokenExpirationDate() {
-        return Date.from(Instant.now().plusMillis(refreshTokenExpiration));
+        return Date.from(Instant.now().plusMillis(jwtProperties.getRefreshTokenExpiration()));
     }
 }
