@@ -123,30 +123,24 @@ public class AuthService {
 
     @Transactional
     public AuthResponseDto authenticateWithGoogle(String idTokenString) {
-        GoogleIdToken.Payload payload = googleOAuthService.verifyIdToken(idTokenString);
+        OAuthUserInfo oAuthUserInfo = googleOAuthService.verifyIdToken(idTokenString);
 
-        String googleId = googleOAuthService.getGoogleId(payload);
-        String email = googleOAuthService.getEmail(payload);
-        String fullName = googleOAuthService.getFullName(payload);
-        String profilePictureUrl = googleOAuthService.getProfilePictureUrl(payload);
-        Boolean isEmailVerified = googleOAuthService.isEmailVerified(payload);
-
-        User user = userRepository.findByGoogleId(googleId).orElseGet(() -> {
-            User existingUser = userRepository.findByEmail(email).orElse(null);
+        User user = userRepository.findByGoogleId(oAuthUserInfo.getProviderId()).orElseGet(() -> {
+            User existingUser = userRepository.findByEmail(oAuthUserInfo.getEmail()).orElse(null);
 
             if (existingUser != null) {
-                existingUser.setGoogleId(googleId);
-                existingUser.setFullName(fullName);
-                existingUser.setProfilePictureUrl(profilePictureUrl);
-                existingUser.setIsEmailVerified(isEmailVerified);
+                existingUser.setGoogleId(oAuthUserInfo.getProviderId());
+                existingUser.setFullName(oAuthUserInfo.getFullName());
+                existingUser.setProfilePictureUrl(oAuthUserInfo.getProfilePictureUrl());
+                existingUser.setIsEmailVerified(oAuthUserInfo.isEmailVerified());
                 return userRepository.save(existingUser);
             } else {
                 User newUser = User.builder()
-                        .googleId(googleId)
-                        .email(email)
-                        .fullName(fullName)
-                        .profilePictureUrl(profilePictureUrl)
-                        .isEmailVerified(isEmailVerified)
+                        .googleId(oAuthUserInfo.getProviderId())
+                        .email(oAuthUserInfo.getEmail())
+                        .fullName(oAuthUserInfo.getFullName())
+                        .profilePictureUrl(oAuthUserInfo.getProfilePictureUrl())
+                        .isEmailVerified(oAuthUserInfo.isEmailVerified())
                         .isActive(true)
                         .build();
                 return userRepository.save(newUser);
@@ -156,7 +150,7 @@ public class AuthService {
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
 
-        log.info("User authenticated with Google: {}", email);
+        log.info("User authenticated with Google: {}", oAuthUserInfo.getEmail());
         return generateAuthResponse(user);
     }
 

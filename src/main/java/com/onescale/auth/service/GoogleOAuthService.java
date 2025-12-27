@@ -4,9 +4,10 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import com.onescale.auth.config.GoogleOAuthProperties;
+import com.onescale.auth.dto.OAuthUserInfo;
 import com.onescale.auth.exception.AuthException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -15,22 +16,18 @@ import java.util.Collections;
 @Slf4j
 public class GoogleOAuthService {
 
-    @Value("${google.oauth.client-id}")
-    private String clientId;
-
     private final GoogleIdTokenVerifier verifier;
 
-    public GoogleOAuthService(@Value("${google.oauth.client-id}") String clientId) {
-        this.clientId = clientId;
+    public GoogleOAuthService(GoogleOAuthProperties properties) {
         this.verifier = new GoogleIdTokenVerifier.Builder(
                 new NetHttpTransport(),
                 new GsonFactory()
         )
-                .setAudience(Collections.singletonList(clientId))
+                .setAudience(Collections.singletonList(properties.getClientId()))
                 .build();
     }
 
-    public GoogleIdToken.Payload verifyIdToken(String idTokenString) {
+    public OAuthUserInfo verifyIdToken(String idTokenString) {
         try {
             GoogleIdToken idToken = verifier.verify(idTokenString);
 
@@ -41,38 +38,19 @@ public class GoogleOAuthService {
 
             GoogleIdToken.Payload payload = idToken.getPayload();
 
-            // Verify token is for our client
-            if (!clientId.equals(payload.getAudience())) {
-                log.error("Token audience mismatch");
-                throw new AuthException("Invalid token audience");
-            }
-
             log.info("Successfully verified Google ID token for user: {}", payload.getEmail());
-            return payload;
+
+            return OAuthUserInfo.builder()
+                    .providerId(payload.getSubject())
+                    .email(payload.getEmail())
+                    .fullName((String) payload.get("name"))
+                    .profilePictureUrl((String) payload.get("picture"))
+                    .emailVerified(payload.getEmailVerified())
+                    .build();
 
         } catch (Exception e) {
             log.error("Failed to verify Google ID token", e);
             throw new AuthException("Failed to verify Google ID token: " + e.getMessage());
         }
-    }
-
-    public String getEmail(GoogleIdToken.Payload payload) {
-        return payload.getEmail();
-    }
-
-    public String getGoogleId(GoogleIdToken.Payload payload) {
-        return payload.getSubject();
-    }
-
-    public String getFullName(GoogleIdToken.Payload payload) {
-        return (String) payload.get("name");
-    }
-
-    public String getProfilePictureUrl(GoogleIdToken.Payload payload) {
-        return (String) payload.get("picture");
-    }
-
-    public Boolean isEmailVerified(GoogleIdToken.Payload payload) {
-        return payload.getEmailVerified();
     }
 }

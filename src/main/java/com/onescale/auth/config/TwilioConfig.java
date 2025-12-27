@@ -10,15 +10,18 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class TwilioConfig {
 
-    @Value("${twilio.account-sid}")
-    private String accountSid;
+    private final TwilioProperties properties;
 
-    @Value("${twilio.auth-token}")
-    private String authToken;
+    public TwilioConfig(TwilioProperties properties) {
+        this.properties = properties;
+    }
 
     @PostConstruct
-    public void initTwilio() {
-        Twilio.init(accountSid, authToken);
-        log.info("Twilio initialized successfully");
+    public void init() {
+        Twilio.init(
+                properties.getAccountSid(),
+                properties.getAuthToken()
+        );
     }
 }
+
