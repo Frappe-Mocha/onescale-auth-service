@@ -398,6 +398,56 @@ curl -X POST http://localhost:8080/api/v1/auth/logout \
 
 ---
 
+#### 8. Validate Access Token
+
+Validate an access token and retrieve user information. This endpoint is designed for other microservices to verify JWT tokens.
+
+**Endpoint**: `POST /validate`
+
+**Request Body**:
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Token is valid",
+  "data": {
+    "is_valid": true,
+    "user_id": 1,
+    "email": "user@example.com",
+    "mobile_number": null,
+    "token_type": "access",
+    "issued_at": 1234567890,
+    "expires_at": 1234568790
+  }
+}
+```
+
+**Error Response** (Invalid Token):
+```json
+{
+  "success": false,
+  "message": "Token has expired",
+  "data": null
+}
+```
+
+**cURL Example**:
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/validate \
+  -H "Content-Type: application/json" \
+  -d '{"accessToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}'
+```
+
+**Use Case**: Other microservices (e.g., trading service) can call this endpoint to validate tokens before processing requests.
+
+---
+
 ## JWT Token Structure
 
 ### Access Token Claims
@@ -436,6 +486,106 @@ Include the access token in the `Authorization` header for protected endpoints:
 curl http://localhost:8080/api/v1/protected-endpoint \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
+
+## Integrating with Other Microservices
+
+### Option 1: Token Validation via API Call (Recommended)
+
+Your other microservices can validate tokens by calling the `/validate` endpoint:
+
+**Java/Spring Boot Example**:
+```java
+@Service
+public class TokenValidationService {
+
+    @Value("${auth.service.url}")
+    private String authServiceUrl;
+
+    private final RestTemplate restTemplate;
+
+    public TokenValidationDto validateToken(String accessToken) {
+        String url = authServiceUrl + "/api/v1/auth/validate";
+
+        ValidateTokenRequest request = new ValidateTokenRequest(accessToken);
+
+        ResponseEntity<ApiResponse> response = restTemplate.postForEntity(
+            url,
+            request,
+            ApiResponse.class
+        );
+
+        if (response.getStatusCode().is2xxSuccessful() &&
+            response.getBody() != null &&
+            response.getBody().isSuccess()) {
+            return (TokenValidationDto) response.getBody().getData();
+        }
+
+        throw new UnauthorizedException("Invalid token");
+    }
+}
+```
+
+**Usage in Controller**:
+```java
+@RestController
+@RequestMapping("/api/v1/trading")
+public class TradingController {
+
+    private final TokenValidationService tokenValidationService;
+
+    @PostMapping("/orders")
+    public ResponseEntity<?> createOrder(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody OrderRequest request) {
+
+        // Extract token from "Bearer <token>"
+        String token = authHeader.substring(7);
+
+        // Validate token
+        TokenValidationDto validation = tokenValidationService.validateToken(token);
+
+        // Use user_id from validation
+        Long userId = validation.getUserId();
+
+        // Process order for user
+        return ResponseEntity.ok(orderService.createOrder(userId, request));
+    }
+}
+```
+
+### Option 2: Local Token Validation (Stateless)
+
+For better performance, you can validate JWT tokens locally using the same secret:
+
+**Java/Spring Boot Example**:
+```java
+@Component
+public class JwtTokenValidator {
+
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+
+    public Claims validateToken(String token) {
+        return Jwts.parser()
+                .verifyWith(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    public Long getUserId(String token) {
+        Claims claims = validateToken(token);
+        return Long.parseLong(claims.getSubject());
+    }
+}
+```
+
+**Note**: With Option 2, you need to:
+- Share the JWT secret across services (use secret management like AWS Secrets Manager)
+- Handle token revocation separately (check against a blacklist in Redis)
+- Verify user status separately if needed
+
+**Recommendation**: Use **Option 1** for simplicity and centralized control. Use **Option 2** only if you need extreme performance and can handle the added complexity.
 
 ## Error Responses
 

@@ -36,6 +36,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/otp/**",
                                 "/api/v1/auth/google",
                                 "/api/v1/auth/refresh",
+                                "/api/v1/auth/validate",
                                 "/api/v1/auth/health"
                         ).permitAll()
                         .requestMatchers("/api/v1/auth/logout").authenticated()

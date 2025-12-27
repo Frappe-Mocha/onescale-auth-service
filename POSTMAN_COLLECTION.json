@@ -239,6 +239,27 @@
           "path": ["logout"]
         }
       }
+    },
+    {
+      "name": "Validate Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"accessToken\": \"{{access_token}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/validate",
+          "host": ["{{base_url}}"],
+          "path": ["validate"]
+        }
+      }
     }
   ]
 }
