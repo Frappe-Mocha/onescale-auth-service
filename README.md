@@ -1206,6 +1206,30 @@ Don't forget to register it in `AndroidManifest.xml`:
 6. **Secure storage**: EncryptedSharedPreferences protects tokens at rest
 7. **Logout**: Revokes refresh token on backend and clears local storage
 
+---
+
+## 📱 Complete Token Expiration Handling
+
+For comprehensive documentation on handling all token expiration scenarios in Android, see:
+
+### **[ANDROID_INTEGRATION.md](ANDROID_INTEGRATION.md)**
+
+This guide includes:
+- ✅ **Token Expiration Scenarios Matrix** - All 5 scenarios with solutions
+- ✅ **AuthManager Class** - Automatic token refresh and Firebase re-authentication
+- ✅ **TokenManager Class** - Secure token storage with expiration checking
+- ✅ **Complete Code Examples** - Production-ready Kotlin code
+- ✅ **Error Handling** - How to handle each expiration scenario
+- ✅ **Testing Guide** - Test token expiration flows
+
+**Scenarios Covered:**
+- ⏱️ **After 1 hour**: Access token expired → Auto-refresh with refresh token
+- 📅 **After 7 days**: Both tokens expired → Re-authenticate with Firebase
+- 🚪 **After logout**: Tokens revoked → Redirect to login
+- 🌙 **Long absence**: Firebase session expired → Full re-login required
+
+---
+
 ## Testing with Postman
 
 A complete Postman collection is included: **`postman_collection.json`**
