@@ -37,6 +37,10 @@ build/
 .env.local
 .env.production
 
+### Firebase ###
+src/main/resources/firebase-service-account.json
+firebase-service-account.json
+
 ### OS ###
 .DS_Store
 Thumbs.db

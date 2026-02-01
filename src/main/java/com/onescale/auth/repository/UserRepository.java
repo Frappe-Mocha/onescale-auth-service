@@ -9,15 +9,15 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    Optional<User> findByFirebaseUid(String firebaseUid);
+
     Optional<User> findByEmail(String email);
 
     Optional<User> findByMobileNumber(String mobileNumber);
 
-    Optional<User> findByGoogleId(String googleId);
+    boolean existsByFirebaseUid(String firebaseUid);
 
     boolean existsByEmail(String email);
 
     boolean existsByMobileNumber(String mobileNumber);
-
-    boolean existsByGoogleId(String googleId);
 }
