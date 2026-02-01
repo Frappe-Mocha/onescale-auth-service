@@ -1,0 +1,568 @@
+{
+  "info": {
+    "name": "OneScale Authentication Service",
+    "description": "Complete API collection for OneScale Authentication Microservice with Firebase and JWT",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "firebaseIdToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "1. Authenticate with Firebase",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Save tokens to collection variables",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.data) {",
+                  "        pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "        pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);",
+                  "        console.log('Access Token:', jsonData.data.accessToken);",
+                  "        console.log('Refresh Token:', jsonData.data.refreshToken);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"{{firebaseIdToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/firebase/authenticate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "firebase", "authenticate"]
+            },
+            "description": "Authenticate user with Firebase ID token (from email/password or phone auth).\n\n**Before using this endpoint:**\n1. Authenticate user in your Android/iOS app via Firebase\n2. Get Firebase ID token using `firebaseUser.getIdToken()`\n3. Paste the ID token in the request body\n\n**Response:**\n- Custom JWT access token (1 hour validity)\n- Custom JWT refresh token (7 days validity)\n- User profile information"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Refresh Access Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Update tokens in collection variables",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.data) {",
+                  "        pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "        pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);",
+                  "        console.log('New Access Token:', jsonData.data.accessToken);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "refresh"]
+            },
+            "description": "Get a new access token using refresh token.\n\n**When to use:**\n- Access token expired (401 Unauthorized error)\n- Proactively refresh before expiration\n\n**Response:**\n- New access token (1 hour validity)\n- Same refresh token (or new one if rotated)"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            },
+            "description": "Logout user by revoking refresh token.\n\n**What happens:**\n1. Refresh token is marked as revoked in database\n2. Token cannot be used to get new access tokens\n3. Client should clear local token storage\n\n**Note:** Access token remains valid until expiration (max 1 hour)"
+          },
+          "response": []
+        },
+        {
+          "name": "4. Validate Custom JWT Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accessToken\": \"{{accessToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "validate"]
+            },
+            "description": "Validate custom JWT access token.\n\n**Use case:**\n- Other microservices validate tokens\n- Check token validity before processing requests\n- Extract user information from token\n\n**Validation checks:**\n1. Token signature is valid\n2. Token has not expired\n3. Token type is 'access' (not refresh)\n4. User exists and is active"
+          },
+          "response": []
+        },
+        {
+          "name": "5. Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "health"]
+            },
+            "description": "Health check endpoint to verify service is running.\n\n**Use case:**\n- Kubernetes/Docker health probes\n- Load balancer health checks\n- Monitoring systems"
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication endpoints for Firebase ID token verification and custom JWT management"
+    },
+    {
+      "name": "User Management",
+      "item": [
+        {
+          "name": "1. Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "me"]
+            },
+            "description": "Get authenticated user's profile.\n\n**Authentication:** Requires valid JWT access token\n\n**Response:**\n- User ID\n- Email address\n- Mobile number\n- Full name\n- Profile picture URL\n- Verification status"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Update Current User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Smith\",\n  \"profilePictureUrl\": \"https://example.com/photo.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "me"]
+            },
+            "description": "Update authenticated user's profile.\n\n**Authentication:** Requires valid JWT access token\n\n**Updatable fields:**\n- fullName (max 255 characters)\n- profilePictureUrl (max 500 characters)\n\n**Note:** Email and mobile number are managed by Firebase and cannot be updated via this endpoint"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Delete Current User Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "me"]
+            },
+            "description": "Delete authenticated user's account (soft delete).\n\n**Authentication:** Requires valid JWT access token\n\n**What happens:**\n1. User account is marked as inactive (is_active = false)\n2. All refresh tokens are revoked\n3. User cannot login anymore\n4. Data is preserved in database (soft delete)\n\n**Note:** This is a soft delete. User data remains in database for audit/recovery purposes."
+          },
+          "response": []
+        }
+      ],
+      "description": "Protected endpoints for user profile management. All endpoints require JWT authentication."
+    },
+    {
+      "name": "Test Scenarios",
+      "item": [
+        {
+          "name": "Scenario 1: Complete Login Flow",
+          "item": [
+            {
+              "name": "Step 1: Authenticate with Firebase",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response has tokens', function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.data).to.have.property('accessToken');",
+                      "    pm.expect(jsonData.data).to.have.property('refreshToken');",
+                      "    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                      "    pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);",
+                      "});",
+                      "",
+                      "pm.test('Access token expires in 1 hour', function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.data.expiresIn).to.eql(3600);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idToken\": \"{{firebaseIdToken}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/firebase/authenticate",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "firebase", "authenticate"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Step 2: Get User Profile",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('User profile retrieved', function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.data).to.have.property('userId');",
+                      "    pm.expect(jsonData.data).to.have.property('email');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/users/me",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "users", "me"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Step 3: Update Profile",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Profile updated', function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.data.fullName).to.eql('Test User Updated');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fullName\": \"Test User Updated\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/users/me",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "users", "me"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Step 4: Logout",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Logged out successfully', function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.success).to.be.true;",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/logout",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "logout"]
+                }
+              },
+              "response": []
+            }
+          ],
+          "description": "Complete user journey: Login → Get Profile → Update Profile → Logout"
+        },
+        {
+          "name": "Scenario 2: Token Refresh Flow",
+          "item": [
+            {
+              "name": "Step 1: Authenticate",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var jsonData = pm.response.json();",
+                      "pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                      "pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idToken\": \"{{firebaseIdToken}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/firebase/authenticate",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "firebase", "authenticate"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Step 2: Refresh Token",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('New access token received', function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.data).to.have.property('accessToken');",
+                      "    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/refresh",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "refresh"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Step 3: Use New Token",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('New token works', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/users/me",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "users", "me"]
+                }
+              },
+              "response": []
+            }
+          ],
+          "description": "Test token refresh mechanism"
+        }
+      ],
+      "description": "End-to-end test scenarios with automated tests"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  }
+}

@@ -162,16 +162,22 @@ public class FirebaseAuthService {
     }
 
     /**
-     * Validate Firebase access token and return user info
+     * Validate custom JWT access token and return user info
      * This is for other microservices to validate tokens
      */
-    public TokenValidationDto validateFirebaseToken(String firebaseIdToken) {
-        FirebaseToken token = firebaseTokenUtil.verifyIdToken(firebaseIdToken);
+    public TokenValidationDto validateAccessToken(String accessToken) {
+        // Validate token signature and expiration
+        io.jsonwebtoken.Claims claims = jwtUtil.validateToken(accessToken);
 
-        String firebaseUid = token.getUid();
+        // Verify it's an access token
+        if (!"access".equals(claims.get("tokenType"))) {
+            throw new InvalidTokenException("Token is not an access token");
+        }
+
+        Long userId = Long.parseLong(claims.getSubject());
 
         // Verify user exists and is active
-        User user = userRepository.findByFirebaseUid(firebaseUid)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new InvalidTokenException("User not found"));
 
         if (!user.getIsActive()) {
@@ -180,12 +186,12 @@ public class FirebaseAuthService {
 
         return TokenValidationDto.builder()
                 .isValid(true)
-                .userId(user.getId())
-                .email(firebaseTokenUtil.getEmail(token))
-                .mobileNumber(firebaseTokenUtil.getPhoneNumber(token))
-                .tokenType("firebase")
-                .issuedAt(token.getIssuedAtTimestamp())
-                .expiresAt(token.getExpiresAtTimestamp())
+                .userId(userId)
+                .email((String) claims.get("email"))
+                .mobileNumber((String) claims.get("mobileNumber"))
+                .tokenType("custom_jwt")
+                .issuedAt(claims.getIssuedAt().getTime() / 1000)
+                .expiresAt(claims.getExpiration().getTime() / 1000)
                 .build();
     }
 

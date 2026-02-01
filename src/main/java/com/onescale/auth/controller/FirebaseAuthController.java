@@ -43,11 +43,11 @@ public class FirebaseAuthController {
     }
 
     /**
-     * Validate Firebase token (for other microservices)
+     * Validate custom JWT access token (for other microservices)
      */
-    @PostMapping("/firebase/validate")
-    public ResponseEntity<ApiResponseDto> validateFirebaseToken(@Valid @RequestBody FirebaseAuthDto request) {
-        TokenValidationDto validationResult = firebaseAuthService.validateFirebaseToken(request.getIdToken());
+    @PostMapping("/validate")
+    public ResponseEntity<ApiResponseDto> validateAccessToken(@Valid @RequestBody AccessTokenDto request) {
+        TokenValidationDto validationResult = firebaseAuthService.validateAccessToken(request.getAccessToken());
         return ResponseEntity.ok(ApiResponseDto.success("Token is valid", validationResult));
     }
 
