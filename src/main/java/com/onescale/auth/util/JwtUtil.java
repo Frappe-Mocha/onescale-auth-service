@@ -37,10 +37,11 @@ public class JwtUtil {
 
     public String generateAccessToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("user_id", user.getId());
+        claims.put("userId", user.getId());
         claims.put("email", user.getEmail());
-        claims.put("mobile_number", user.getMobileNumber());
-        claims.put("token_type", "access");
+        claims.put("mobileNumber", user.getMobileNumber());
+        claims.put("firebaseUid", user.getFirebaseUid());
+        claims.put("tokenType", "access");
 
         return Jwts.builder()
                 .claims(claims)
@@ -54,8 +55,8 @@ public class JwtUtil {
 
     public String generateRefreshToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("user_id", user.getId());
-        claims.put("token_type", "refresh");
+        claims.put("userId", user.getId());
+        claims.put("tokenType", "refresh");
 
         return Jwts.builder()
                 .claims(claims)
@@ -97,9 +98,24 @@ public class JwtUtil {
         return Long.parseLong(claims.getSubject());
     }
 
+    public String getEmailFromToken(String token) {
+        Claims claims = validateToken(token);
+        return (String) claims.get("email");
+    }
+
+    public String getMobileNumberFromToken(String token) {
+        Claims claims = validateToken(token);
+        return (String) claims.get("mobileNumber");
+    }
+
+    public String getFirebaseUidFromToken(String token) {
+        Claims claims = validateToken(token);
+        return (String) claims.get("firebaseUid");
+    }
+
     public String getTokenType(String token) {
         Claims claims = validateToken(token);
-        return (String) claims.get("token_type");
+        return (String) claims.get("tokenType");
     }
 
     public boolean isAccessToken(String token) {
