@@ -10,8 +10,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GoogleAuthDto {
+public class FirebaseAuthDto {
 
-    @NotBlank(message = "Google ID token is required")
+    @NotBlank(message = "Firebase ID token is required")
     private String idToken;
+
+    // Optional: Additional user data that's not in Firebase token
+    private String fullName;
 }

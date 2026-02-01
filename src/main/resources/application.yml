@@ -42,24 +42,11 @@ jwt:
   refresh-token-expiration: 2592000000 # 30 days in milliseconds
   issuer: onescale-auth-service
 
-# Twilio Configuration
-twilio:
-  account-sid: ${TWILIO_ACCOUNT_SID}
-  auth-token: ${TWILIO_AUTH_TOKEN}
-  verify-service-sid: ${TWILIO_VERIFY_SERVICE_SID}
-
-# Google OAuth Configuration
-google:
-  oauth:
-    client-id: ${GOOGLE_OAUTH_CLIENT_ID}
-
-# OTP Configuration
-otp:
-  expiration-seconds: 300  # 5 minutes
-  max-attempts: 3
-  rate-limit:
-    max-requests: 5
-    window-seconds: 3600  # 1 hour
+# Firebase Configuration
+firebase:
+  project-id: ${FIREBASE_PROJECT_ID}
+  config:
+    path: ${FIREBASE_CONFIG_PATH:}
 
 logging:
   level:

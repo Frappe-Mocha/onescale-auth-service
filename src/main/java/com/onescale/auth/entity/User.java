@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Table(name = "users", indexes = {
     @Index(name = "idx_user_email", columnList = "email"),
     @Index(name = "idx_user_mobile", columnList = "mobile_number"),
-    @Index(name = "idx_user_google_id", columnList = "google_id")
+    @Index(name = "idx_user_firebase_uid", columnList = "firebase_uid")
 })
 @EntityListeners(AuditingEntityListener.class)
 @Data
@@ -28,14 +28,14 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "firebase_uid", unique = true, nullable = false, length = 128)
+    private String firebaseUid;
+
     @Column(unique = true, length = 255)
     private String email;
 
     @Column(name = "mobile_number", unique = true, length = 20)
     private String mobileNumber;
-
-    @Column(name = "google_id", unique = true, length = 255)
-    private String googleId;
 
     @Column(name = "full_name", length = 255)
     private String fullName;

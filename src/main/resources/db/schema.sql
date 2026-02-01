@@ -1,11 +1,11 @@
--- OneScale Auth Service Database Schema
+-- OneScale Auth Service Database Schema (Firebase Authentication)
 
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
+    firebase_uid VARCHAR(128) NOT NULL UNIQUE,
     email VARCHAR(255) UNIQUE,
     mobile_number VARCHAR(20) UNIQUE,
-    google_id VARCHAR(255) UNIQUE,
     full_name VARCHAR(255),
     profile_picture_url VARCHAR(500),
     is_email_verified BOOLEAN DEFAULT FALSE,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 -- Create indexes for users table
 CREATE INDEX IF NOT EXISTS idx_user_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_user_mobile ON users(mobile_number);
-CREATE INDEX IF NOT EXISTS idx_user_google_id ON users(google_id);
+CREATE INDEX IF NOT EXISTS idx_user_firebase_uid ON users(firebase_uid);
 
 -- Create indexes for refresh_tokens table
 CREATE INDEX IF NOT EXISTS idx_refresh_token ON refresh_tokens(token);
@@ -55,14 +55,14 @@ CREATE TRIGGER update_users_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 -- Insert comments for documentation
-COMMENT ON TABLE users IS 'Stores user account information for all authentication methods';
+COMMENT ON TABLE users IS 'Stores user account information authenticated via Firebase';
 COMMENT ON TABLE refresh_tokens IS 'Stores refresh tokens for JWT authentication';
 
-COMMENT ON COLUMN users.email IS 'User email address (nullable, used for email OTP auth)';
-COMMENT ON COLUMN users.mobile_number IS 'User mobile number in E.164 format (nullable, used for mobile OTP auth)';
-COMMENT ON COLUMN users.google_id IS 'Google account ID (nullable, used for Google OAuth)';
-COMMENT ON COLUMN users.is_email_verified IS 'Whether the email has been verified via OTP';
-COMMENT ON COLUMN users.is_mobile_verified IS 'Whether the mobile number has been verified via OTP';
+COMMENT ON COLUMN users.firebase_uid IS 'Firebase User ID (unique identifier from Firebase Auth)';
+COMMENT ON COLUMN users.email IS 'User email address (from Firebase)';
+COMMENT ON COLUMN users.mobile_number IS 'User mobile number in E.164 format (from Firebase phone auth)';
+COMMENT ON COLUMN users.is_email_verified IS 'Whether the email has been verified in Firebase';
+COMMENT ON COLUMN users.is_mobile_verified IS 'Whether the mobile number has been verified in Firebase';
 COMMENT ON COLUMN users.is_active IS 'Whether the user account is active';
 COMMENT ON COLUMN users.last_login_at IS 'Timestamp of the last successful login';
 
