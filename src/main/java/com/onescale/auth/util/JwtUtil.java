@@ -11,7 +11,6 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -35,12 +34,23 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Access-token claims:
+     *   sub        – user.id (String)
+     *   userId    – user.id (Long)
+     *   clientId   – backend-issued UUID, required at token-request time
+     *   email      – user's email (nullable)
+     *   mobileNumber – user's mobile (nullable)
+     *   fullName   – user's display name
+     *   tokenType  – "access"
+     */
     public String generateAccessToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
+        claims.put("clientId", user.getClientId());
         claims.put("email", user.getEmail());
         claims.put("mobileNumber", user.getMobileNumber());
-        claims.put("firebaseUid", user.getFirebaseUid());
+        claims.put("fullName", user.getFullName());
         claims.put("tokenType", "access");
 
         return Jwts.builder()
@@ -53,6 +63,12 @@ public class JwtUtil {
                 .compact();
     }
 
+    /**
+     * Refresh-token claims are intentionally minimal — only
+     * userId and tokenType.  The refresh token is looked up by
+     * its raw value in the refresh_tokens table; all other user
+     * data is fetched from that row.
+     */
     public String generateRefreshToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
@@ -67,6 +83,10 @@ public class JwtUtil {
                 .signWith(getSigningKey())
                 .compact();
     }
+
+    // -----------------------------------------------------------
+    // VALIDATION
+    // -----------------------------------------------------------
 
     public Claims validateToken(String token) {
         try {
@@ -93,9 +113,18 @@ public class JwtUtil {
         }
     }
 
+    // -----------------------------------------------------------
+    // CLAIM EXTRACTORS
+    // -----------------------------------------------------------
+
     public Long getUserIdFromToken(String token) {
         Claims claims = validateToken(token);
         return Long.parseLong(claims.getSubject());
+    }
+
+    public String getClientIdFromToken(String token) {
+        Claims claims = validateToken(token);
+        return (String) claims.get("clientId");
     }
 
     public String getEmailFromToken(String token) {
@@ -108,9 +137,9 @@ public class JwtUtil {
         return (String) claims.get("mobileNumber");
     }
 
-    public String getFirebaseUidFromToken(String token) {
+    public String getFullNameFromToken(String token) {
         Claims claims = validateToken(token);
-        return (String) claims.get("firebaseUid");
+        return (String) claims.get("fullName");
     }
 
     public String getTokenType(String token) {
@@ -125,6 +154,10 @@ public class JwtUtil {
     public boolean isRefreshToken(String token) {
         return "refresh".equals(getTokenType(token));
     }
+
+    // -----------------------------------------------------------
+    // EXPIRATION HELPERS
+    // -----------------------------------------------------------
 
     public Long getAccessTokenExpirationInSeconds() {
         return jwtProperties.getAccessTokenExpiration() / 1000;

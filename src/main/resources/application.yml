@@ -42,12 +42,6 @@ jwt:
   refresh-token-expiration: 604800000   # 7 days in milliseconds
   issuer: onescale-auth-service
 
-# Firebase Configuration
-firebase:
-  project-id: ${FIREBASE_PROJECT_ID}
-  config:
-    path: ${FIREBASE_CONFIG_PATH:}
-
 logging:
   level:
     com.onescale.auth: ${LOG_LEVEL:INFO}

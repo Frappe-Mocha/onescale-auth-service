@@ -26,8 +26,8 @@ import java.util.Map;
  * 1. Check if error is "Token has expired"
  * 2. Try to refresh access token using refresh token (POST /api/v1/auth/refresh)
  * 3. If refresh succeeds: Retry original request with new access token
- * 4. If refresh fails with 401: Refresh token also expired, re-authenticate with Firebase
- * 5. If Firebase session expired: Redirect to login screen
+ * 4. If refresh fails with 401: Refresh token also expired, re-authenticate on the frontend
+ * 5. If frontend session expired: Redirect to login screen
  */
 @RestControllerAdvice
 @Slf4j
@@ -86,7 +86,7 @@ public class GlobalExceptionHandler {
      * - User account inactive (soft deleted)
      * - User account suspended/banned
      * - Refresh token revoked (user logged out)
-     * - Firebase token verification failed
+     * - Duplicate email or mobile on registration
      *
      * Returns 401 Unauthorized - Client should re-authenticate
      */
@@ -96,18 +96,6 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponseDto.error(ex.getMessage()));
-    }
-
-    /**
-     * Handle OTP-related errors (legacy, kept for backward compatibility)
-     */
-    @ExceptionHandler(OtpException.class)
-    public ResponseEntity<ApiResponseDto> handleOtpException(OtpException ex) {
-        log.warn("OTP exception: {}", ex.getMessage());
-
-        return ResponseEntity
-                .badRequest()
                 .body(ApiResponseDto.error(ex.getMessage()));
     }
 

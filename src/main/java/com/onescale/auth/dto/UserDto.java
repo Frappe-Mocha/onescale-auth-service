@@ -15,6 +15,14 @@ public class UserDto {
     @JsonProperty("user_id")
     private Long userId;
 
+    @JsonProperty("client_id")
+    private String clientId;
+
+    @JsonProperty("device_id")
+    private String deviceId;
+
+    private String provider;
+
     private String email;
 
     @JsonProperty("mobile_number")

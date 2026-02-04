@@ -38,8 +38,8 @@ import java.util.Collections;
  *
  * The client should handle 401 errors by:
  * 1. Trying to refresh access token using refresh token
- * 2. If refresh fails (refresh token expired), re-authenticate with Firebase
- * 3. If Firebase session expired, redirect to login screen
+ * 2. If refresh fails (refresh token expired), re-authenticate on the frontend
+ * 3. If frontend session expired, redirect to login screen
  */
 @Component
 @RequiredArgsConstructor

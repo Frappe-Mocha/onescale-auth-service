@@ -7,15 +7,25 @@
 -- =============================================================================
 -- USERS TABLE
 -- =============================================================================
--- Stores user account information from Firebase Authentication
--- Users are created when they first authenticate via Firebase
+-- Stores user account information.
+-- Users are created when the frontend POSTs to /register after completing
+-- OAuth / OTP verification on the client side.  The backend never contacts
+-- Firebase or any other OAuth provider directly.
 
 CREATE TABLE IF NOT EXISTS users (
     -- Primary Key
     id BIGSERIAL PRIMARY KEY,
 
-    -- Firebase Integration
-    firebase_uid VARCHAR(128) NOT NULL UNIQUE,
+    -- Backend-issued UUID.  Included in every JWT this user receives.
+    -- The /token endpoint requires it to issue new tokens.
+    client_id VARCHAR(36) NOT NULL UNIQUE,
+
+    -- Android device identifier supplied by the frontend.
+    -- Updated on every login so the backend can validate it at token time.
+    device_id VARCHAR(255) NOT NULL,
+
+    -- Auth provider used on the frontend: GOOGLE, FACEBOOK, EMAIL, MOBILE
+    provider VARCHAR(20) NOT NULL,
 
     -- User Contact Information
     email VARCHAR(255) UNIQUE,
@@ -41,17 +51,20 @@ CREATE TABLE IF NOT EXISTS users (
 -- Indexes for optimized queries
 CREATE INDEX IF NOT EXISTS idx_user_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_user_mobile ON users(mobile_number);
-CREATE INDEX IF NOT EXISTS idx_user_firebase_uid ON users(firebase_uid);
+CREATE INDEX IF NOT EXISTS idx_user_client_id ON users(client_id);
+CREATE INDEX IF NOT EXISTS idx_user_device_id ON users(device_id);
 
 -- Comments for documentation
-COMMENT ON TABLE users IS 'Stores user account information from Firebase Authentication';
-COMMENT ON COLUMN users.firebase_uid IS 'Unique identifier from Firebase Authentication (e.g., abc123xyz)';
-COMMENT ON COLUMN users.email IS 'User email address (from Firebase email/password auth)';
-COMMENT ON COLUMN users.mobile_number IS 'User phone number in E.164 format (from Firebase phone auth)';
-COMMENT ON COLUMN users.is_email_verified IS 'Whether email has been verified via Firebase';
-COMMENT ON COLUMN users.is_mobile_verified IS 'Whether mobile number has been verified via Firebase';
-COMMENT ON COLUMN users.is_active IS 'Account status - false means soft deleted';
-COMMENT ON COLUMN users.last_login_at IS 'Timestamp of most recent successful authentication';
+COMMENT ON TABLE users IS 'User accounts — created by the frontend after client-side OAuth/OTP verification';
+COMMENT ON COLUMN users.client_id IS 'Backend-generated UUID; required by /token to issue JWTs';
+COMMENT ON COLUMN users.device_id IS 'Android device identifier; updated on every login';
+COMMENT ON COLUMN users.provider IS 'Frontend auth provider: GOOGLE, FACEBOOK, EMAIL, MOBILE';
+COMMENT ON COLUMN users.email IS 'User email address (unique, nullable)';
+COMMENT ON COLUMN users.mobile_number IS 'User phone number in E.164 format (unique, nullable)';
+COMMENT ON COLUMN users.is_email_verified IS 'Whether email was supplied at registration';
+COMMENT ON COLUMN users.is_mobile_verified IS 'Whether mobile number was supplied at registration';
+COMMENT ON COLUMN users.is_active IS 'Account status — false means soft-deleted';
+COMMENT ON COLUMN users.last_login_at IS 'Timestamp of most recent successful login';
 
 -- =============================================================================
 -- REFRESH TOKENS TABLE
@@ -121,8 +134,8 @@ CREATE TRIGGER update_users_updated_at
 -- SAMPLE QUERIES
 -- =============================================================================
 
--- Find user by Firebase UID
--- SELECT * FROM users WHERE firebase_uid = 'abc123xyz';
+-- Find user by client_id (used internally by /token)
+-- SELECT * FROM users WHERE client_id = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
 
 -- Find user by email
 -- SELECT * FROM users WHERE email = 'user@example.com';
