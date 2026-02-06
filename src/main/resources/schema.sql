@@ -24,8 +24,11 @@ CREATE TABLE IF NOT EXISTS users (
     -- Updated on every login so the backend can validate it at token time.
     device_id VARCHAR(255) NOT NULL,
 
-    -- Auth provider used on the frontend: GOOGLE, FACEBOOK, EMAIL, MOBILE
+    -- Auth provider used on the frontend: GOOGLE, FACEBOOK, EMAIL, MOBILE, PASSWORD
     provider VARCHAR(20) NOT NULL,
+
+    -- Password (BCrypt hash) - only for PASSWORD provider, null for OAuth providers
+    password_hash VARCHAR(255),
 
     -- User Contact Information
     email VARCHAR(255) UNIQUE,
@@ -58,7 +61,8 @@ CREATE INDEX IF NOT EXISTS idx_user_device_id ON users(device_id);
 COMMENT ON TABLE users IS 'User accounts — created by the frontend after client-side OAuth/OTP verification';
 COMMENT ON COLUMN users.client_id IS 'Backend-generated UUID; required by /token to issue JWTs';
 COMMENT ON COLUMN users.device_id IS 'Android device identifier; updated on every login';
-COMMENT ON COLUMN users.provider IS 'Frontend auth provider: GOOGLE, FACEBOOK, EMAIL, MOBILE';
+COMMENT ON COLUMN users.provider IS 'Auth provider: PASSWORD (backend-validated), GOOGLE, FACEBOOK, EMAIL, MOBILE (OAuth)';
+COMMENT ON COLUMN users.password_hash IS 'BCrypt password hash (only for PASSWORD provider, null for OAuth)';
 COMMENT ON COLUMN users.email IS 'User email address (unique, nullable)';
 COMMENT ON COLUMN users.mobile_number IS 'User phone number in E.164 format (unique, nullable)';
 COMMENT ON COLUMN users.is_email_verified IS 'Whether email was supplied at registration';

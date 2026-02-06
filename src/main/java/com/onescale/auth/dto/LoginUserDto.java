@@ -10,12 +10,12 @@ import lombok.NoArgsConstructor;
 /**
  * Request body for POST /api/v1/auth/login
  *
- * The frontend has already authenticated the user (Firebase password flow,
- * Google sign-in, etc.).  It sends the same contact details that were used
- * at registration so the backend can locate the existing user row.
+ * Authenticates user and returns JWT tokens directly.
  *
- * At least one of email / mobileNumber must be present.
- * device_id is mandatory — it is persisted / updated on every login.
+ * For PASSWORD provider users: email/mobile + password required, backend validates
+ * For OAuth users: This endpoint may not be used (OAuth handled on frontend)
+ *
+ * Returns: JWT access token + refresh token on successful authentication
  */
 @Data
 @Builder
@@ -32,4 +32,8 @@ public class LoginUserDto {
     @NotBlank(message = "Device ID is required")
     @Size(max = 255, message = "Device ID must not exceed 255 characters")
     private String deviceId;
+
+    // Password - REQUIRED for PASSWORD provider users
+    @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
+    private String password;
 }

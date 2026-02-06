@@ -10,25 +10,21 @@ import lombok.NoArgsConstructor;
 /**
  * Request body for POST /api/v1/auth/token
  *
- * After a user is registered (or logged in) and the frontend holds the
- * user_id and client_id returned by the backend, it calls this endpoint
- * to obtain a signed JWT access + refresh token pair.
+ * @deprecated Use POST /api/v1/auth/login instead which validates credentials directly.
+ * This DTO kept for backward compatibility only.
  *
- * device_id is included so the backend can verify that the requesting
- * device matches the one on file for this user.
+ * Validates (clientId, deviceId) pair before issuing JWT tokens.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Deprecated
 public class TokenRequestDto {
-
-    @NotNull(message = "User ID is required")
-    private Long userId;
-
-    @NotBlank(message = "Device ID is required")
-    private String deviceId;
 
     @NotBlank(message = "Client ID is required")
     private String clientId;
+
+    @NotBlank(message = "Device ID is required")
+    private String deviceId;
 }

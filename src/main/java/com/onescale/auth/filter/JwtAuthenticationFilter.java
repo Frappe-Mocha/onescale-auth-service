@@ -77,35 +77,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Validate token signature and expiration
                 // This will throw InvalidTokenException if token is invalid or expired
                 if (jwtUtil.isAccessToken(jwt)) {
-                    Long userId = jwtUtil.getUserIdFromToken(jwt);
+                    String clientId = jwtUtil.getClientIdFromToken(jwt);
 
                     // CRITICAL: Check if user still exists and is active
                     // This handles scenarios where:
                     // 1. User account was deleted (soft delete with is_active = false)
                     // 2. User was banned/suspended by admin
                     // 3. User explicitly logged out (tokens revoked in database)
-                    User user = userRepository.findById(userId).orElse(null);
+                    User user = userRepository.findByClientId(clientId).orElse(null);
 
                     if (user == null) {
-                        log.warn("Token validation failed: User {} not found", userId);
+                        log.warn("Token validation failed: Client {} not found", clientId);
                         // Don't set authentication - endpoint will fail with 401
                         filterChain.doFilter(request, response);
                         return;
                     }
 
                     if (!user.getIsActive()) {
-                        log.warn("Token validation failed: User {} is not active (account deleted or suspended)", userId);
+                        log.warn("Token validation failed: Client {} is not active (account deleted or suspended)", clientId);
                         // Don't set authentication - endpoint will fail with 401
                         filterChain.doFilter(request, response);
                         return;
                     }
 
-                    // Create authentication token with user ID as principal
+                    // Create authentication token with client_id as principal
                     // Controllers can access this via: Authentication.getPrincipal()
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
-                                    userId, // Principal - user ID for easy access in controllers
-                                    null,   // Credentials - not needed for JWT auth
+                                    clientId, // Principal - client_id for easy access in controllers
+                                    null,     // Credentials - not needed for JWT auth
                                     Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
                             );
 
@@ -115,7 +115,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // This allows protected endpoints to access the authenticated user
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                    log.debug("Successfully authenticated user {} via JWT access token", userId);
+                    log.debug("Successfully authenticated client {} via JWT access token", clientId);
                 } else {
                     // Token is not an access token (probably a refresh token)
                     log.warn("Token validation failed: Received non-access token (token type: {})",

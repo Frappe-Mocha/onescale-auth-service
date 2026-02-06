@@ -26,11 +26,12 @@ public class SecurityConfig {
 
     /**
      * Public (no JWT required):
-     *   POST /api/v1/auth/register   – create user row
-     *   POST /api/v1/auth/login      – locate existing user
-     *   POST /api/v1/auth/token      – issue JWT pair
+     *   POST /api/v1/auth/register   – create user account
+     *   POST /api/v1/auth/login      – authenticate and issue JWT pair
+     *   POST /api/v1/auth/token      – DEPRECATED: issue JWT pair (use /login)
      *   POST /api/v1/auth/refresh    – refresh access token
-     *   POST /api/v1/auth/validate   – inter-service token check
+     *   GET  /api/v1/auth/validate   – validate token from header (for API gateway)
+     *   POST /api/v1/auth/validate   – validate token from body (legacy)
      *   GET  /api/v1/auth/health     – liveness probe
      *
      * Protected (valid access-token required):
@@ -51,9 +52,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/auth/register",
                                 "/api/v1/auth/login",
-                                "/api/v1/auth/token",
+                                "/api/v1/auth/token",      // deprecated, kept for backward compat
                                 "/api/v1/auth/refresh",
-                                "/api/v1/auth/validate",
+                                "/api/v1/auth/validate",   // both GET and POST
                                 "/api/v1/auth/health"
                         ).permitAll()
                         .requestMatchers("/api/v1/auth/logout").authenticated()

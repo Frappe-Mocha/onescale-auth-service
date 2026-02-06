@@ -21,15 +21,15 @@ public class UserService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    public UserDto getUserById(Long userId) {
-        User user = userRepository.findById(userId)
+    public UserDto getUserByClientId(String clientId) {
+        User user = userRepository.findByClientId(clientId)
                 .orElseThrow(() -> new AuthException("User not found"));
         return mapUserToDto(user);
     }
 
     @Transactional
-    public UserDto updateUser(Long userId, UserUpdateDto updateDto) {
-        User user = userRepository.findById(userId)
+    public UserDto updateUser(String clientId, UserUpdateDto updateDto) {
+        User user = userRepository.findByClientId(clientId)
                 .orElseThrow(() -> new AuthException("User not found"));
 
         if (updateDto.getFullName() != null) {
@@ -40,26 +40,25 @@ public class UserService {
         }
 
         User updatedUser = userRepository.save(user);
-        log.info("User profile updated for user ID: {}", userId);
+        log.info("User profile updated for client: {}", clientId);
         return mapUserToDto(updatedUser);
     }
 
     @Transactional
-    public void deleteUser(Long userId) {
-        User user = userRepository.findById(userId)
+    public void deleteUser(String clientId) {
+        User user = userRepository.findByClientId(clientId)
                 .orElseThrow(() -> new AuthException("User not found"));
 
         user.setIsActive(false);
         userRepository.save(user);
 
         refreshTokenRepository.revokeAllUserTokens(user, LocalDateTime.now());
-        log.info("User account deleted (soft) for user ID: {}", userId);
+        log.info("User account deleted (soft) for client: {}", clientId);
     }
 
     private UserDto mapUserToDto(User user) {
         return UserDto.builder()
-                .userId(user.getId())
-                .clientId(user.getClientId())
+                .clientId(user.getClientId())  // Only external identifier
                 .deviceId(user.getDeviceId())
                 .provider(user.getProvider())
                 .email(user.getEmail())

@@ -15,8 +15,8 @@ public class TokenValidationDto {
     @JsonProperty("is_valid")
     private Boolean isValid;
 
-    @JsonProperty("user_id")
-    private Long userId;
+    @JsonProperty("client_id")
+    private String clientId;
 
     private String email;
 

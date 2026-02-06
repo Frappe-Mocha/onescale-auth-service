@@ -40,9 +40,13 @@ public class User {
     @Column(name = "device_id", nullable = false, length = 255)
     private String deviceId;
 
-    // Auth-provider that was used on the frontend: GOOGLE, FACEBOOK, EMAIL, MOBILE
+    // Auth-provider: PASSWORD (backend-validated), or GOOGLE, FACEBOOK, EMAIL, MOBILE (OAuth)
     @Column(name = "provider", nullable = false, length = 20)
     private String provider;
+
+    // BCrypt password hash - only for PASSWORD provider, null for OAuth providers
+    @Column(name = "password_hash", length = 255)
+    private String passwordHash;
 
     @Column(unique = true, length = 255)
     private String email;

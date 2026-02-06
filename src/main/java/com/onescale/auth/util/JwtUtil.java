@@ -36,18 +36,14 @@ public class JwtUtil {
 
     /**
      * Access-token claims:
-     *   sub        – user.id (String)
-     *   userId    – user.id (Long)
-     *   clientId   – backend-issued UUID, required at token-request time
-     *   email      – user's email (nullable)
+     *   sub          – client_id (UUID String) - the only user identifier exposed to clients
+     *   email        – user's email (nullable)
      *   mobileNumber – user's mobile (nullable)
-     *   fullName   – user's display name
-     *   tokenType  – "access"
+     *   fullName     – user's display name
+     *   tokenType    – "access"
      */
     public String generateAccessToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", user.getId());
-        claims.put("clientId", user.getClientId());
         claims.put("email", user.getEmail());
         claims.put("mobileNumber", user.getMobileNumber());
         claims.put("fullName", user.getFullName());
@@ -55,10 +51,10 @@ public class JwtUtil {
 
         return Jwts.builder()
                 .claims(claims)
-                .subject(user.getId().toString())
+                .subject(user.getClientId())  // client_id is the subject
                 .issuer(jwtProperties.getIssuer())
                 .issuedAt(Date.from(Instant.now()))
-                .expiration(Date.from(Instant.now().plusMillis(jwtProperties.getAccessTokenExpiration())))
+                .expiration(Date.from(Instant.now().plusMillis(jwtProperties.getAccessTokenExpiration()))
                 .signWith(getSigningKey())
                 .compact();
     }
@@ -71,12 +67,11 @@ public class JwtUtil {
      */
     public String generateRefreshToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", user.getId());
         claims.put("tokenType", "refresh");
 
         return Jwts.builder()
                 .claims(claims)
-                .subject(user.getId().toString())
+                .subject(user.getClientId())  // client_id is the subject
                 .issuer(jwtProperties.getIssuer())
                 .issuedAt(Date.from(Instant.now()))
                 .expiration(Date.from(Instant.now().plusMillis(jwtProperties.getRefreshTokenExpiration())))
@@ -117,14 +112,13 @@ public class JwtUtil {
     // CLAIM EXTRACTORS
     // -----------------------------------------------------------
 
-    public Long getUserIdFromToken(String token) {
-        Claims claims = validateToken(token);
-        return Long.parseLong(claims.getSubject());
-    }
-
+    /**
+     * Extract client_id from token subject.
+     * This is the primary user identifier for all external APIs.
+     */
     public String getClientIdFromToken(String token) {
         Claims claims = validateToken(token);
-        return (String) claims.get("clientId");
+        return claims.getSubject();  // subject is now client_id
     }
 
     public String getEmailFromToken(String token) {

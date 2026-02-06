@@ -23,8 +23,8 @@ public class UserController {
      */
     @GetMapping("/me")
     public ResponseEntity<ApiResponseDto> getCurrentUser(Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        UserDto user = userService.getUserById(userId);
+        String clientId = (String) authentication.getPrincipal();
+        UserDto user = userService.getUserByClientId(clientId);
         return ResponseEntity.ok(ApiResponseDto.success("User profile retrieved successfully", user));
     }
 
@@ -36,8 +36,8 @@ public class UserController {
     public ResponseEntity<ApiResponseDto> updateCurrentUser(
             Authentication authentication,
             @Valid @RequestBody UserUpdateDto updateDto) {
-        Long userId = (Long) authentication.getPrincipal();
-        UserDto updatedUser = userService.updateUser(userId, updateDto);
+        String clientId = (String) authentication.getPrincipal();
+        UserDto updatedUser = userService.updateUser(clientId, updateDto);
         return ResponseEntity.ok(ApiResponseDto.success("User profile updated successfully", updatedUser));
     }
 
@@ -47,8 +47,8 @@ public class UserController {
      */
     @DeleteMapping("/me")
     public ResponseEntity<ApiResponseDto> deleteCurrentUser(Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        userService.deleteUser(userId);
+        String clientId = (String) authentication.getPrincipal();
+        userService.deleteUser(clientId);
         return ResponseEntity.ok(ApiResponseDto.success("User account deleted successfully"));
     }
 }
